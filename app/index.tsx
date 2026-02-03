@@ -18,7 +18,7 @@ export default function Index() {
     console.log(selected);
   }
   return (
-    <View className="w-full h-full bg-blue-50">
+    <View className="w-full h-full bg-blue-50 dark:bg-slate-900">
       <View className="h-1/4 "></View>
       <View className="flex flex-wrap flex-row  justify-center mt-2">
         {selected.map((val, k) =>
@@ -26,7 +26,7 @@ export default function Index() {
             <Pressable
               key={key}
               onPress={() => toggleSelected(k, key)}
-              className={`size-12 ${_v.selected ? "bg-red-500" : "bg-blue-50"} items-center justify-center border-l border-t ${(key + 1) % 9 === 0 ? "border-r" : ""} ${(k + 1) % 9 === 0 ? "border-b" : ""}`}
+              className={`size-12 ${_v.selected ? "bg-red-500 dark:bg-blue-400" : "bg-blue-50 dark:bg-slate-900"} items-center justify-center  border-l-[0.5px] border-t-[0.5px] ${(key + 1) % 9 === 0 ? "border-r-[0.5px]" : ""} ${(k + 1) % 9 === 0 ? "border-b-[0.5px]" : ""} dark:border-gray-50/30`}
             >
               <Text>{_v.selected}</Text>
             </Pressable>
