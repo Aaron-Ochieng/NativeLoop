@@ -1,5 +1,7 @@
+import { Sun } from "lucide-react-native";
 import "./globals.css";
 import { Stack } from "expo-router";
+import { Pressable } from "react-native";
 
 export default function RootLayout() {
   return (
@@ -10,6 +12,11 @@ export default function RootLayout() {
         headerStyle: {
           backgroundColor: "#eff6ff",
         },
+        headerRight: () => (
+          <Pressable className="mr-4">
+            <Sun color="gray" />
+          </Pressable>
+        ),
       }}
     />
   );
