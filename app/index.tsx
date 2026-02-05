@@ -17,6 +17,77 @@ export default function Index() {
       return newMemory;
     });
   }
+
+  function startRound() {
+    const newPattern = generatePattern(
+      ROWS,
+      COLS,
+      ACTIVE_CELLS + Math.floor(score / 5),
+    ); // Increase difficulty every 5 points
+    setTargetGrid(newPattern);
+    // Initialize empty user grid
+    setUserGrid(
+      Array(ROWS)
+        .fill(null)
+        .map(() =>
+          Array(COLS)
+            .fill(null)
+            .map(() => ({ selected: false })),
+        ),
+    );
+    setPhase("MEMORIZE");
+  }
+
+  // Memorization Timer
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    if (phase === "MEMORIZE") {
+      timeout = setTimeout(() => {
+        setPhase("RECALL");
+      }, 3000); // 3 seconds to memorize
+    }
+    return () => clearTimeout(timeout);
+  }, [phase]);
+
+  function handleCellPress(rowIndex: number, colIndex: number) {
+    if (phase !== "RECALL") return;
+
+    const isTarget = targetGrid[rowIndex][colIndex].selected;
+    const isAlreadySelected = userGrid[rowIndex][colIndex].selected;
+
+    if (isAlreadySelected) return;
+
+    if (isTarget) {
+      const newUserGrid = [...userGrid];
+      newUserGrid[rowIndex][colIndex] = { selected: true }; // Mark as found
+      setUserGrid(newUserGrid);
+
+      // Check for round completion
+      let correctCount = 0;
+      let totalTargets = 0;
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (targetGrid[r][c].selected) totalTargets++;
+          if (targetGrid[r][c].selected && newUserGrid[r][c].selected)
+            correctCount++;
+        }
+      }
+
+      if (correctCount === totalTargets) {
+        setScore((s) => s + 1);
+        setTimeout(startRound, 500);
+      }
+    } else {
+      // Briefly show red then reset
+      const newUserGrid = [...userGrid];
+      newUserGrid[rowIndex][colIndex] = { selected: true }; // Mark as selected (wrong)
+      setUserGrid(newUserGrid);
+      setTimeout(startRound, 500); // Brief delay to realize mistake
+    }
+  }
+
+  
+
   return (
     <View className="w-full h-full bg-blue-50 dark:bg-slate-900">
       <View className="h-1/4 w-full items-center justify-center">
