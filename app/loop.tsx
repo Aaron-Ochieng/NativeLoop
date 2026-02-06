@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, {
   useSharedValue,
@@ -8,9 +8,15 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { useEffect } from "react";
+import { gameLoop } from "@/loops/gameLoop";
+import { SendHorizonal, Star } from "lucide-react-native";
 const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
 const LoopGame = () => {
+  const { width } = useWindowDimensions();
+  const sz = Math.round(width / 12);
+  const size = `size-[${sz - 4}]`;
+  console.log(size);
   const rotation = useSharedValue(0);
   useEffect(() => {
     rotation.value = withRepeat(
@@ -29,18 +35,26 @@ const LoopGame = () => {
 
   return (
     <View className="bg-slate-900 items-center justify-center w-full h-full">
-      <AnimatedIcon
-        name="settings-outline"
-        size={65}
-        color="white"
-        style={animatedStyle}
-      />
-      <Text
-        className="text-xl mt-4 text-black dark:text-gray-100"
-        style={{ fontFamily: "JetBrainsMono_400Regular" }}
-      >
-        Page under development
-      </Text>
+      <View className="">
+        {gameLoop.map((v, key) => (
+          <View key={key} className="flex-row">
+            {v.map((v, key) => (
+              <View
+                key={key}
+                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "purple" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : "dark: bg-slate-950"}`}
+              >
+                {v.iS ? (
+                  <SendHorizonal size={18} strokeWidth={2} color="#ffffff" />
+                ) : v.iE ? (
+                  <Star size={15} fill="#ffffff" strokeOpacity={0} />
+                ) : (
+                  ""
+                )}
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
