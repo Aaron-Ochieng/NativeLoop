@@ -1,8 +1,8 @@
 import { InstructionIcon } from "@/components/start-instruction-icon";
 import { gameLoop } from "@/loops/gameLoop";
 import useInstructionStore from "@/store/loop-game-instructions";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import {
+  ChevronRight,
   Circle,
   CornerUpLeft,
   CornerUpRight,
@@ -13,16 +13,15 @@ import {
   Star,
 } from "lucide-react-native";
 import { useEffect } from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import Animated, {
+import { Pressable, View } from "react-native";
+import {
   Easing,
-  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import IsActive from "@/components/is-active";
-const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
+
+import whereToRotate from "@/utils/rotation";
 
 const LoopGame = () => {
   const {
@@ -30,10 +29,12 @@ const LoopGame = () => {
     changeInstructionBox,
     currentInsertInstructionBox,
     feedInstruction,
+    startPos,
+    play,
+    planePos,
+    rotationDegree,
   } = useInstructionStore();
-  const { width } = useWindowDimensions();
-  const sz = Math.round(width / 12);
-  const size = `size-[${sz - 4}]`;
+
   const rotation = useSharedValue(0);
   useEffect(() => {
     rotation.value = withRepeat(
@@ -46,24 +47,31 @@ const LoopGame = () => {
     );
   }, [rotation]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
-
   return (
     <View className="bg-slate-900 items-center justify-center w-full h-full">
       <View className="">
-        {gameLoop.map((v, key) => (
-          <View key={key} className="flex-row">
+        {gameLoop.map((v, k) => (
+          <View key={k} className="flex-row">
             {v.map((v, key) => (
               <View
                 key={key}
-                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "purple" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : "dark: bg-slate-950"}`}
+                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "purple" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : "bg-slate-950"}`}
               >
-                {v.iS ? (
-                  <SendHorizonal size={18} strokeWidth={2} color="#ffffff" />
-                ) : v.iE ? (
-                  <Star size={15} fill="#ffffff" strokeOpacity={0} />
+                {(v.iS || v.iE) &&
+                k !== startPos.row &&
+                key !== startPos.col ? (
+                  <Star
+                    size={15}
+                    fill="#ffffff"
+                    strokeOpacity={0}
+                    color="#ffffff"
+                  />
+                ) : k === planePos.row && key === planePos.col ? (
+                  <View
+                    className={`${whereToRotate(rotationDegree.from, rotationDegree.to)}`}
+                  >
+                    <SendHorizonal color="#ffffff" fill="#ffffff" size={20} />
+                  </View>
                 ) : (
                   ""
                 )}
@@ -153,11 +161,19 @@ const LoopGame = () => {
         </Pressable>
         <Pressable
           onPress={() => {
-            feedInstruction("FORWARD", "", "");
+            play();
           }}
           className="size-12 mt-6 bg-slate-950 rounded-lg items-center justify-center"
         >
           <Play size={20} color="#ffffff" strokeWidth={2} fill="#fff" />
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            feedInstruction("FORWARD", "", "");
+          }}
+          className="size-12 mt-6 bg-slate-950 rounded-lg items-center justify-center"
+        >
+          <ChevronRight size={20} color="#ffffff" strokeWidth={3} />
         </Pressable>
       </View>
       <View className="mt-4">

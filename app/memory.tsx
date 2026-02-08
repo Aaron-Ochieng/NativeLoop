@@ -28,19 +28,19 @@ export default function Index() {
   }, [phase, changePhase]);
 
   return (
-    <View className="w-full h-full bg-blue-50 dark:bg-slate-900 items-center pt-12">
+    <View className="w-full h-full bg-slate-900 items-center pt-12">
       <View className="h-1/4 w-full items-center justify-center space-y-4">
         {phase === "IDLE" || phase === "GAME_OVER" ? (
           <View className="items-center">
             <Text
-              className="text-3xl  dark:text-white mb-4"
+              className="text-3xl  text-white mb-4"
               style={{ fontFamily: "JetBrainsMono_400Regular" }}
             >
               {phase === "GAME_OVER" ? "Game Over!" : "Memory Matrix"}
             </Text>
             {phase === "GAME_OVER" && (
               <Text
-                className="text-xl dark:text-white mb-4"
+                className="text-xl text-white mb-4"
                 style={{ fontFamily: "JetBrainsMono_400Regular" }}
               >
                 Final Score: {score}
@@ -66,13 +66,13 @@ export default function Index() {
               onComplete={() => changePhase("GAME_OVER")}
             />
             <Text
-              className="text-xl dark:text-white font-semibold mt-2"
+              className="text-xl text-white font-semibold mt-2"
               style={{ fontFamily: "JetBrainsMono_400Regular" }}
             >
               {phase === "MEMORIZE" ? "Memorize!" : "Recall!"}
             </Text>
             <Text
-              className="text-lg dark:text-gray-300"
+              className="text-lg text-gray-300"
               style={{ fontFamily: "JetBrainsMono_400Regular" }}
             >
               Score: {score}
