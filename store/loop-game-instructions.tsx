@@ -1,4 +1,5 @@
 import { gameLoop, Loop } from "@/loops/gameLoop";
+import { Plane } from "lucide-react-native";
 import { create } from "zustand";
 
 export type MOVE = "FORWARD" | "TURN_RIGHT" | "TURN_LEFT" | "NUll";
@@ -15,7 +16,12 @@ export type coordinates = {
   row: number;
   col: number;
 };
+type rotate = { from: number; to: number };
 type InstructionsState = {
+  rotationDegree: rotate;
+  startPos: coordinates;
+  endPos: coordinates;
+  planePos: coordinates;
   gameBoard: Loop[][];
   userBoard: Loop[][] | null;
   instructions: Instruction[] | null;
@@ -23,9 +29,16 @@ type InstructionsState = {
   currentInsertInstructionBox: coordinates;
   changeInstructionBox: (coordinate: coordinates) => void;
   feedInstruction: (move: MOVE, paint: COLORS, color: COLORS) => void;
+  play: () => void;
+  currentInstructionIndex: number;
 };
 
 const useInstructionStore = create<InstructionsState>()((set, get) => ({
+  currentInstructionIndex: 0,
+  rotationDegree: { from: 0, to: 0 },
+  startPos: { row: 9, col: 1 },
+  endPos: { row: 5, col: 9 },
+  planePos: { row: 9, col: 1 },
   gameBoard: gameLoop,
   userBoard: null,
   instructions: null,
@@ -129,6 +142,56 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       return;
     }
   },
+  play: () => {
+    const {
+      planePos,
+      instructionBoard,
+      rotationDegree,
+      currentInstructionIndex,
+    } = get();
+    if (instructionBoard === null) return;
+
+    const idx =
+      currentInstructionIndex + 1 <= instructionBoard[0].length - 1
+        ? currentInstructionIndex + 1
+        : 1;
+    const v = instructionBoard[0][currentInstructionIndex];
+    if (v.move !== "NUll" || v.color !== "") {
+      /** check if current square matches the color given */
+
+      let c: number = 0;
+      let r: number = 0;
+      if (rotationDegree.to === 0) {
+        c = c + 1;
+      } else if (rotationDegree.to === -90) {
+        r = r - 1;
+      } else if (rotationDegree.to === 90) {
+        r = r + 1;
+      }
+      const nP: coordinates = {
+        row: planePos.row + r,
+        col: planePos.col + c,
+      };
+      set({ planePos: nP });
+    } else if (v.move === "TURN_LEFT") {
+      const newRotationDegree: rotate = {
+        from: rotationDegree.to,
+        to: -90,
+      };
+      set({ rotationDegree: newRotationDegree });
+    } else if (v.move === "TURN_RIGHT") {
+      const newRotationDegree: rotate = {
+        from: rotationDegree.to,
+        to: -90,
+      };
+      set({ rotationDegree: newRotationDegree });
+    }
+
+    set({ currentInstructionIndex: idx });
+  },
 }));
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 export default useInstructionStore;
