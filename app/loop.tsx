@@ -1,9 +1,9 @@
 import { InstructionIcon } from "@/components/start-instruction-icon";
-import { gameLoop } from "@/loops/gameLoop";
+import WhereToRotate from "@/components/where-to-rotate";
 import useInstructionStore from "@/store/loop-game-instructions";
 import {
   ChevronRight,
-  Circle,
+  
   CornerUpLeft,
   CornerUpRight,
   MoveUp,
@@ -13,15 +13,13 @@ import {
   Star,
 } from "lucide-react-native";
 import { useEffect } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import {
   Easing,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-
-import whereToRotate from "@/utils/rotation";
 
 const LoopGame = () => {
   const {
@@ -33,6 +31,7 @@ const LoopGame = () => {
     play,
     planePos,
     rotationDegree,
+    gameBoard,
   } = useInstructionStore();
 
   const rotation = useSharedValue(0);
@@ -49,13 +48,17 @@ const LoopGame = () => {
 
   return (
     <View className="bg-slate-900 items-center justify-center w-full h-full">
+      <Text className="text-white font-bold text-2xl">
+        {rotationDegree.to}
+        {"  "} {WhereToRotate(rotationDegree.to)}
+      </Text>
       <View className="">
-        {gameLoop.map((v, k) => (
+        {gameBoard.map((v, k) => (
           <View key={k} className="flex-row">
             {v.map((v, key) => (
               <View
                 key={key}
-                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "purple" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : "bg-slate-950"}`}
+                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
               >
                 {(v.iS || v.iE) &&
                 k !== startPos.row &&
@@ -67,9 +70,7 @@ const LoopGame = () => {
                     color="#ffffff"
                   />
                 ) : k === planePos.row && key === planePos.col ? (
-                  <View
-                    className={`${whereToRotate(rotationDegree.from, rotationDegree.to)}`}
-                  >
+                  <View className={`${WhereToRotate(rotationDegree.to)}`}>
                     <SendHorizonal color="#ffffff" fill="#ffffff" size={20} />
                   </View>
                 ) : (
@@ -153,11 +154,11 @@ const LoopGame = () => {
         </Pressable>
         <Pressable
           onPress={() => {
-            feedInstruction("NUll", "", "");
+            feedInstruction("REPEAT", "", "");
           }}
           className="size-12 mt-6 bg-slate-950 rounded-lg items-center justify-center"
         >
-          <Circle size={20} color="#ffffff" strokeWidth={4} />
+          <Text className="text-white font-bold text-xl">0</Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -169,7 +170,7 @@ const LoopGame = () => {
         </Pressable>
         <Pressable
           onPress={() => {
-            feedInstruction("FORWARD", "", "");
+            play();
           }}
           className="size-12 mt-6 bg-slate-950 rounded-lg items-center justify-center"
         >
@@ -178,7 +179,7 @@ const LoopGame = () => {
       </View>
       <View className="mt-4">
         {instructionBoard?.map((_i, k) => (
-          <View key={k} className="flex-row gap-4">
+          <View key={k} className="flex-row gap-2">
             {_i!.map((v, key) => (
               <Pressable
                 key={key}
@@ -191,16 +192,16 @@ const LoopGame = () => {
                 }
               >
                 <View
-                  className={`size-14 ${instructionBoard[k][key].color === "amber" ? "bg-amber-500" : instructionBoard[k][key].color === "indigo" ? "bg-indigo-500" : instructionBoard[k][key].color === "red" ? "bg-red-500" : "bg-slate-950"} rounded-xl items-center justify-center ${currentInsertInstructionBox.row === k && currentInsertInstructionBox.col === key && instructionBoard[k][key].color === "" ? "border-2 border-slate-500" : ""}`}
+                  className={`size-12 ${instructionBoard[k][key].color === "amber" ? "bg-amber-500" : instructionBoard[k][key].color === "indigo" ? "bg-indigo-500" : instructionBoard[k][key].color === "red" ? "bg-red-500" : "bg-slate-950"} rounded-xl items-center justify-center ${currentInsertInstructionBox.row === k && currentInsertInstructionBox.col === key && instructionBoard[k][key].color === "" ? "border-2 border-slate-500" : ""}`}
                 >
                   {InstructionIcon(v)}
                   {instructionBoard[k][key].paintSquare ? (
                     <Plus
                       color={
                         instructionBoard[k][key].paintSquare === "amber"
-                          ? "yellow"
+                          ? "#f59e0b"
                           : instructionBoard[k][key].paintSquare === "red"
-                            ? "red"
+                            ? "#ef4444"
                             : instructionBoard[k][key].paintSquare === "indigo"
                               ? "#4f46e5"
                               : "white"
@@ -213,6 +214,8 @@ const LoopGame = () => {
                     <CornerUpLeft size={20} color="#ffffff" strokeWidth={4} />
                   ) : instructionBoard[k][key].move === "TURN_RIGHT" ? (
                     <CornerUpRight size={20} color="#ffffff" strokeWidth={4} />
+                  ) : instructionBoard[k][key].move === "REPEAT" ? (
+                    <Text className="text-white font-bold text-xl">0</Text>
                   ) : (
                     ""
                   )}
