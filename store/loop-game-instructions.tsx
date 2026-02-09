@@ -1,8 +1,8 @@
 import { gameLoop, Loop } from "@/loops/gameLoop";
-import { Plane } from "lucide-react-native";
 import { create } from "zustand";
+import { rotationDegree as rt } from "@/utils/rotation";
 
-export type MOVE = "FORWARD" | "TURN_RIGHT" | "TURN_LEFT" | "NUll";
+export type MOVE = "FORWARD" | "TURN_RIGHT" | "TURN_LEFT" | "REPEAT" | "NUll";
 export type COLORS = "red" | "amber" | "indigo" | "";
 export type Instruction = {
   move: MOVE;
@@ -18,28 +18,38 @@ export type coordinates = {
 };
 type rotate = { from: number; to: number };
 type InstructionsState = {
+  canPlay: boolean;
   rotationDegree: rotate;
   startPos: coordinates;
   endPos: coordinates;
   planePos: coordinates;
   gameBoard: Loop[][];
+  _gameBoardCopy: Loop[][] | null;
   userBoard: Loop[][] | null;
   instructions: Instruction[] | null;
   instructionBoard: Instruction[][] | null;
   currentInsertInstructionBox: coordinates;
   changeInstructionBox: (coordinate: coordinates) => void;
   feedInstruction: (move: MOVE, paint: COLORS, color: COLORS) => void;
+  _moveForward: () => void;
+  _changeGridColor: (c: COLORS) => void;
+  _copyGameBoard: () => void;
   play: () => void;
   currentInstructionIndex: number;
 };
 
 const useInstructionStore = create<InstructionsState>()((set, get) => ({
+  canPlay: true,
   currentInstructionIndex: 0,
   rotationDegree: { from: 0, to: 0 },
   startPos: { row: 9, col: 1 },
   endPos: { row: 5, col: 9 },
   planePos: { row: 9, col: 1 },
   gameBoard: gameLoop,
+  _gameBoardCopy: null,
+  _copyGameBoard: () => {
+    set({ _gameBoardCopy: gameLoop });
+  },
   userBoard: null,
   instructions: null,
   instructionBoard: [
@@ -84,8 +94,25 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
         isStart: false,
         startCode: null,
       },
+      {
+        move: "NUll",
+        color: "",
+        colorSquare: false,
+        paintSquare: "",
+        isStart: false,
+        startCode: null,
+      },
+      {
+        move: "NUll",
+        color: "",
+        colorSquare: false,
+        paintSquare: "",
+        isStart: false,
+        startCode: null,
+      },
     ],
   ],
+
   currentInsertInstructionBox: { row: 0, col: 0 },
   changeInstructionBox: (coordinate) =>
     set({ currentInsertInstructionBox: coordinate }),
@@ -142,56 +169,93 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       return;
     }
   },
+  _moveForward: () => {
+    const { planePos, rotationDegree } = get();
+    if (rotationDegree.to === 0) {
+      set({ planePos: { row: planePos.row, col: planePos.col + 1 } });
+    } else if (rotationDegree.to === 180 || rotationDegree.to === -180) {
+      set({ planePos: { row: planePos.row, col: planePos.col - 1 } });
+    } else if (rotationDegree.to === 90 || rotationDegree.to === -270) {
+      set({ planePos: { row: planePos.row + 1, col: planePos.col } });
+    } else if (rotationDegree.to === -90 || rotationDegree.to === 270) {
+      set({ planePos: { row: planePos.row - 1, col: planePos.col } });
+    }
+  },
+
+  _changeGridColor: (color: COLORS) => {
+    const { gameBoard, planePos } = get();
+    if (color !== "") {
+      const newBoard = gameBoard.map((row, r) =>
+        row.map((cell, c) =>
+          r === planePos.row && c === planePos.col
+            ? { ...cell, c: color }
+            : cell,
+        ),
+      );
+      set({ gameBoard: newBoard });
+    }
+  },
   play: () => {
     const {
       planePos,
       instructionBoard,
       rotationDegree,
       currentInstructionIndex,
+      _changeGridColor,
+      _moveForward,
+      gameBoard,
     } = get();
     if (instructionBoard === null) return;
 
-    const idx =
+    let idx =
       currentInstructionIndex + 1 <= instructionBoard[0].length - 1
         ? currentInstructionIndex + 1
         : 1;
     const v = instructionBoard[0][currentInstructionIndex];
-    if (v.move !== "NUll" || v.color !== "") {
+    if (v.move === "FORWARD" && v.color !== "") {
       /** check if current square matches the color given */
-
-      let c: number = 0;
-      let r: number = 0;
-      if (rotationDegree.to === 0) {
-        c = c + 1;
-      } else if (rotationDegree.to === -90) {
-        r = r - 1;
-      } else if (rotationDegree.to === 90) {
-        r = r + 1;
+      /** Move the plane if it matches the box color */
+      /** Check the plane rotation degree */
+      if (gameBoard[planePos.row][planePos.col].c === v.color) {
+        _moveForward();
       }
-      const nP: coordinates = {
-        row: planePos.row + r,
-        col: planePos.col + c,
-      };
-      set({ planePos: nP });
+    } else if (v.move === "FORWARD" && v.color === "") {
+      get()._moveForward();
+    } else if (v.move === "TURN_LEFT" && v.color !== "") {
+      if (gameBoard[planePos.row][planePos.col].c === v.color) {
+        const { to } = rotationDegree;
+        const degree = rt(to, -90);
+        set({ rotationDegree: { from: to, to: degree } });
+      }
     } else if (v.move === "TURN_LEFT") {
-      const newRotationDegree: rotate = {
-        from: rotationDegree.to,
-        to: -90,
-      };
-      set({ rotationDegree: newRotationDegree });
+      const { to } = rotationDegree;
+      const degree = rt(to, -90);
+      set({ rotationDegree: { from: to, to: degree } });
+    } else if (v.move === "TURN_RIGHT" && v.color !== "") {
+      if (gameBoard[planePos.row][planePos.col].c === v.color) {
+        const { to } = rotationDegree;
+        const degree = rt(to, 90);
+        set({ rotationDegree: { from: to, to: degree } });
+      }
     } else if (v.move === "TURN_RIGHT") {
-      const newRotationDegree: rotate = {
-        from: rotationDegree.to,
-        to: -90,
-      };
-      set({ rotationDegree: newRotationDegree });
+      const { to } = rotationDegree;
+      const degree = rt(to, 90);
+      set({ rotationDegree: { from: to, to: degree } });
+    } else if (v.paintSquare !== "" && v.color !== "") {
+      if (gameBoard[planePos.row][planePos.col].c !== v.paintSquare) {
+        _changeGridColor(v.paintSquare);
+      }
+    } else if (v.paintSquare !== "") {
+      _changeGridColor(v.paintSquare);
+    } else if (v.move === "REPEAT" && v.color !== "") {
+      if (gameBoard[planePos.row][planePos.col].c === v.color) {
+        idx = 1;
+      }
+    } else if (v.move === "REPEAT") {
+      idx = 1;
     }
-
     set({ currentInstructionIndex: idx });
   },
 }));
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 export default useInstructionStore;
