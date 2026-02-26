@@ -36,6 +36,8 @@ type InstructionsState = {
   _copyGameBoard: () => void;
   play: () => void;
   currentInstructionIndex: number;
+  resetGame: () => void;
+  _planeOverlaps: () => void;
 };
 
 const useInstructionStore = create<InstructionsState>()((set, get) => ({
@@ -169,16 +171,31 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       return;
     }
   },
+  _planeOverlaps: () => {
+    const { planePos, startPos, gameBoard } = get();
+    if (
+      gameBoard[planePos.row][planePos.col].c === "" &&
+      gameLoop[planePos.row][planePos.col].c === ""
+    ) {
+      setTimeout(() => {
+        set({ planePos: startPos, currentInstructionIndex: 0 });
+      }, 500);
+    }
+  },
   _moveForward: () => {
-    const { planePos, rotationDegree } = get();
+    const { planePos, rotationDegree, _planeOverlaps } = get();
     if (rotationDegree.to === 0) {
       set({ planePos: { row: planePos.row, col: planePos.col + 1 } });
+      _planeOverlaps();
     } else if (rotationDegree.to === 180 || rotationDegree.to === -180) {
       set({ planePos: { row: planePos.row, col: planePos.col - 1 } });
+      _planeOverlaps();
     } else if (rotationDegree.to === 90 || rotationDegree.to === -270) {
       set({ planePos: { row: planePos.row + 1, col: planePos.col } });
+      _planeOverlaps();
     } else if (rotationDegree.to === -90 || rotationDegree.to === 270) {
       set({ planePos: { row: planePos.row - 1, col: planePos.col } });
+      _planeOverlaps();
     }
   },
 
@@ -207,11 +224,14 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
     } = get();
     if (instructionBoard === null) return;
 
-    let idx =
+    let idx = currentInstructionIndex + 1;
+    console.log(idx, instructionBoard[0].length);
+    idx =
       currentInstructionIndex + 1 <= instructionBoard[0].length - 1
         ? currentInstructionIndex + 1
-        : 1;
+        : backTrack(idx, instructionBoard);
     const v = instructionBoard[0][currentInstructionIndex];
+
     if (v.move === "FORWARD" && v.color !== "") {
       /** check if current square matches the color given */
       /** Move the plane if it matches the box color */
@@ -220,7 +240,7 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
         _moveForward();
       }
     } else if (v.move === "FORWARD" && v.color === "") {
-      get()._moveForward();
+      _moveForward();
     } else if (v.move === "TURN_LEFT" && v.color !== "") {
       if (gameBoard[planePos.row][planePos.col].c === v.color) {
         const { to } = rotationDegree;
@@ -249,13 +269,35 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       _changeGridColor(v.paintSquare);
     } else if (v.move === "REPEAT" && v.color !== "") {
       if (gameBoard[planePos.row][planePos.col].c === v.color) {
-        idx = 1;
+        // check if there is a repeat loop in the front the set start Index to that;
+        idx = backTrack(idx, instructionBoard);
       }
     } else if (v.move === "REPEAT") {
-      idx = 1;
+      idx = backTrack(idx, instructionBoard);
     }
+
     set({ currentInstructionIndex: idx });
+  },
+  resetGame: () => {
+    const { startPos } = get();
+    set({ planePos: startPos });
   },
 }));
 
+const backTrack = (
+  currentIndex: number,
+  instructionBoard: Instruction[][],
+): number => {
+  if (currentIndex + 1 !== instructionBoard[0].length) {
+    return currentIndex;
+  }
+
+  for (let i = instructionBoard[0].length - 1; i >= 1; i--) {
+    if (instructionBoard[0][i].move === "REPEAT") {
+      return i + 1;
+    }
+  }
+
+  return 1;
+};
 export default useInstructionStore;
