@@ -18,6 +18,7 @@ export type coordinates = {
 };
 type rotate = { from: number; to: number };
 type InstructionsState = {
+  won: boolean;
   canPlay: boolean;
   rotationDegree: rotate;
   startPos: coordinates;
@@ -41,6 +42,7 @@ type InstructionsState = {
 };
 
 const useInstructionStore = create<InstructionsState>()((set, get) => ({
+  won: false,
   canPlay: true,
   currentInstructionIndex: 0,
   rotationDegree: { from: 0, to: 0 },
@@ -221,15 +223,20 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       _changeGridColor,
       _moveForward,
       gameBoard,
+      endPos,
+      resetGame,
     } = get();
     if (instructionBoard === null) return;
 
+    if (planePos.row === endPos.row && planePos.col === endPos.col) {
+      set({ won: true });
+      resetGame();
+      return;
+    }
     let idx = currentInstructionIndex + 1;
-    console.log(idx, instructionBoard[0].length);
-    idx =
-      currentInstructionIndex + 1 <= instructionBoard[0].length - 1
-        ? currentInstructionIndex + 1
-        : backTrack(idx, instructionBoard);
+    if (idx >= instructionBoard[0].length) {
+      idx = backTrack(idx, instructionBoard);
+    }
     const v = instructionBoard[0][currentInstructionIndex];
 
     if (v.move === "FORWARD" && v.color !== "") {
@@ -280,7 +287,11 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
   },
   resetGame: () => {
     const { startPos } = get();
-    set({ planePos: startPos });
+    set({
+      planePos: startPos,
+      rotationDegree: { from: 0, to: 0 },
+      won: false,
+    });
   },
 }));
 
@@ -288,16 +299,14 @@ const backTrack = (
   currentIndex: number,
   instructionBoard: Instruction[][],
 ): number => {
-  if (currentIndex + 1 !== instructionBoard[0].length) {
-    return currentIndex;
-  }
-
-  for (let i = instructionBoard[0].length - 1; i >= 1; i--) {
-    if (instructionBoard[0][i].move === "REPEAT") {
-      return i + 1;
+  if (currentIndex >= instructionBoard[0].length) {
+    for (let i = instructionBoard[0].length - 1; i >= 1; i--) {
+      if (instructionBoard[0][i].move === "REPEAT") {
+        const nextIndex = i + 1;
+        return nextIndex < instructionBoard[0].length ? nextIndex : 1;
+      }
     }
   }
-
   return 1;
 };
 export default useInstructionStore;

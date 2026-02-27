@@ -3,7 +3,6 @@ import WhereToRotate from "@/components/where-to-rotate";
 import useInstructionStore from "@/store/loop-game-instructions";
 import {
   ChevronRight,
-  
   CornerUpLeft,
   CornerUpRight,
   MoveUp,
@@ -20,6 +19,7 @@ import {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import Feather from "@expo/vector-icons/Feather";
 
 const LoopGame = () => {
   const {
@@ -32,6 +32,9 @@ const LoopGame = () => {
     planePos,
     rotationDegree,
     gameBoard,
+    resetGame,
+    currentInstructionIndex,
+    won,
   } = useInstructionStore();
 
   const rotation = useSharedValue(0);
@@ -48,10 +51,19 @@ const LoopGame = () => {
 
   return (
     <View className="bg-slate-900 items-center justify-center w-full h-full">
-      <Text className="text-white font-bold text-2xl">
-        {rotationDegree.to}
-        {"  "} {WhereToRotate(rotationDegree.to)}
-      </Text>
+      <View className="flex-row w-full items-center justify-between px-4 py-6">
+        <Pressable
+          onPress={() => resetGame()}
+          className="size-12 rounded-xl border border-gray-500 items-center justify-center"
+        >
+          <Feather name="trash" size={24} color="#6b7280" />
+        </Pressable>
+        {won && <Text className="text-emerald-500 font-bold text-xl">Won</Text>}
+        <Text className="text-white font-bold text-2xl">
+          {rotationDegree.to}
+          {WhereToRotate(rotationDegree.to)}
+        </Text>
+      </View>
       <View className="">
         {gameBoard.map((v, k) => (
           <View key={k} className="flex-row">
@@ -192,7 +204,7 @@ const LoopGame = () => {
                 }
               >
                 <View
-                  className={`size-12 ${instructionBoard[k][key].color === "amber" ? "bg-amber-500" : instructionBoard[k][key].color === "indigo" ? "bg-indigo-500" : instructionBoard[k][key].color === "red" ? "bg-red-500" : "bg-slate-950"} rounded-xl items-center justify-center ${currentInsertInstructionBox.row === k && currentInsertInstructionBox.col === key && instructionBoard[k][key].color === "" ? "border-2 border-slate-500" : ""}`}
+                  className={`size-12 ${currentInstructionIndex === key && currentInstructionIndex !== 0 ? "border border-pink-600" : ""} ${currentInsertInstructionBox.row === k && currentInsertInstructionBox.col === key ? "border-red-300" : ""} ${instructionBoard[k][key].color === "amber" ? "bg-amber-500" : instructionBoard[k][key].color === "indigo" ? "bg-indigo-500" : instructionBoard[k][key].color === "red" ? "bg-red-500" : "bg-slate-950"} rounded-xl items-center justify-center ${currentInsertInstructionBox.row === k && currentInsertInstructionBox.col === key && instructionBoard[k][key].color === "" ? "border-2 border-slate-500" : ""}`}
                 >
                   {InstructionIcon(v)}
                   {instructionBoard[k][key].paintSquare ? (
