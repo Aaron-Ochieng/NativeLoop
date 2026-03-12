@@ -37,6 +37,16 @@ const LoopGame = () => {
     won,
   } = useInstructionStore();
 
+  const autoPlay = () => {
+    if (useInstructionStore.getState().won) return;
+    setTimeout(() => {
+      play();
+      if (!useInstructionStore.getState().won) {
+        autoPlay();
+      }
+    }, 600);
+  };
+
   const rotation = useSharedValue(0);
   useEffect(() => {
     rotation.value = withRepeat(
@@ -175,7 +185,7 @@ const LoopGame = () => {
         </Pressable>
         <Pressable
           onPress={() => {
-            play();
+            autoPlay();
           }}
           className="size-12 mt-6 bg-slate-950 rounded-lg items-center justify-center"
         >
