@@ -185,20 +185,26 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
     }
   },
   _moveForward: () => {
-    const { planePos, rotationDegree, _planeOverlaps } = get();
+    const { planePos, rotationDegree, _planeOverlaps, endPos } = get();
+    let newPos;
     if (rotationDegree.to === 0) {
-      set({ planePos: { row: planePos.row, col: planePos.col + 1 } });
-      _planeOverlaps();
+      newPos = { row: planePos.row, col: planePos.col + 1 };
     } else if (rotationDegree.to === 180 || rotationDegree.to === -180) {
-      set({ planePos: { row: planePos.row, col: planePos.col - 1 } });
-      _planeOverlaps();
+      newPos = { row: planePos.row, col: planePos.col - 1 };
     } else if (rotationDegree.to === 90 || rotationDegree.to === -270) {
-      set({ planePos: { row: planePos.row + 1, col: planePos.col } });
-      _planeOverlaps();
+      newPos = { row: planePos.row + 1, col: planePos.col };
     } else if (rotationDegree.to === -90 || rotationDegree.to === 270) {
-      set({ planePos: { row: planePos.row - 1, col: planePos.col } });
-      _planeOverlaps();
+      newPos = { row: planePos.row - 1, col: planePos.col };
     }
+
+    // Check if we reached the end immediately after moving
+    if (newPos.row === endPos.row && newPos.col === endPos.col) {
+      set({ planePos: newPos, won: true });
+      return;
+    }
+
+    set({ planePos: newPos });
+    _planeOverlaps();
   },
 
   _changeGridColor: (color: COLORS) => {
@@ -224,13 +230,11 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       _moveForward,
       gameBoard,
       endPos,
-      resetGame,
     } = get();
     if (instructionBoard === null) return;
 
     if (planePos.row === endPos.row && planePos.col === endPos.col) {
       set({ won: true });
-      resetGame();
       return;
     }
     let idx = currentInstructionIndex + 1;
@@ -284,6 +288,12 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
     }
 
     set({ currentInstructionIndex: idx });
+
+    // Final win check after instruction completes
+    const { planePos: finalPlanePos, endPos: finalEndPos } = get();
+    if (finalPlanePos.row === finalEndPos.row && finalPlanePos.col === finalEndPos.col) {
+      set({ won: true });
+    }
   },
   resetGame: () => {
     const { startPos } = get();

@@ -58,7 +58,7 @@ const LoopGame = () => {
         >
           <Feather name="trash" size={24} color="#6b7280" />
         </Pressable>
-        {won && <Text className="text-emerald-500 font-bold text-xl">Won</Text>}
+        {won && <Text className="text-emerald-500 font-bold text-xl">You Won</Text>}
         <Text className="text-white font-bold text-2xl">
           {rotationDegree.to}
           {WhereToRotate(rotationDegree.to)}
@@ -73,6 +73,7 @@ const LoopGame = () => {
                 className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
               >
                 {(v.iS || v.iE) &&
+                !(k === planePos.row && key === planePos.col) &&
                 k !== startPos.row &&
                 key !== startPos.col ? (
                   <Star
