@@ -21,6 +21,8 @@ import {
 } from "react-native-reanimated";
 import Feather from "@expo/vector-icons/Feather";
 
+import { calculateBoxSize } from "@/utils/size-calculator";
+
 const LoopGame = () => {
   const {
     instructionBoard,
@@ -36,6 +38,8 @@ const LoopGame = () => {
     currentInstructionIndex,
     won,
   } = useInstructionStore();
+
+  const boxSize = calculateBoxSize(gameBoard[0]?.length || 12);
 
   const autoPlay = () => {
     if (useInstructionStore.getState().won) return;
@@ -80,7 +84,8 @@ const LoopGame = () => {
             {v.map((v, key) => (
               <View
                 key={key}
-                className={`size-[30] m-[1px] rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
+                style={{ width: boxSize, height: boxSize }}
+                className={`m-[1px] rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
               >
                 {(v.iS || v.iE) &&
                 !(k === planePos.row && key === planePos.col) &&
