@@ -20,6 +20,7 @@ type rotate = { from: number; to: number };
 type InstructionsState = {
   won: boolean;
   canPlay: boolean;
+  overlapResetCount: number;
   rotationDegree: rotate;
   startPos: coordinates;
   endPos: coordinates;
@@ -41,14 +42,44 @@ type InstructionsState = {
   _planeOverlaps: () => void;
 };
 
+const findStartEnd = (
+  board: Loop[][],
+): { startPos: coordinates; endPos: coordinates } => {
+  let startPos: coordinates | null = null;
+  let endPos: coordinates | null = null;
+
+  for (let row = 0; row < board.length; row++) {
+    for (let col = 0; col < board[row].length; col++) {
+      const cell = board[row][col];
+      if (cell.iS && !startPos) startPos = { row, col };
+      if (cell.iE && !endPos) endPos = { row, col };
+    }
+  }
+
+  const fallbackStart: coordinates = { row: 0, col: 0 };
+  const fallbackEnd: coordinates = {
+    row: Math.max(0, board.length - 1),
+    col: Math.max(0, (board[0]?.length ?? 1) - 1),
+  };
+
+  return {
+    startPos: startPos ?? fallbackStart,
+    endPos: endPos ?? fallbackEnd,
+  };
+};
+
+const { startPos: initialStartPos, endPos: initialEndPos } =
+  findStartEnd(gameLoop);
+
 const useInstructionStore = create<InstructionsState>()((set, get) => ({
   won: false,
   canPlay: true,
+  overlapResetCount: 0,
   currentInstructionIndex: 0,
   rotationDegree: { from: 0, to: 0 },
-  startPos: { row: 9, col: 1 },
-  endPos: { row: 5, col: 9 },
-  planePos: { row: 9, col: 1 },
+  startPos: initialStartPos,
+  endPos: initialEndPos,
+  planePos: initialStartPos,
   gameBoard: gameLoop,
   _gameBoardCopy: null,
   _copyGameBoard: () => {
@@ -180,13 +211,20 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
       gameLoop[planePos.row][planePos.col].c === ""
     ) {
       setTimeout(() => {
-        set({ planePos: startPos, currentInstructionIndex: 0 });
+        const { overlapResetCount } = get();
+        set({
+          planePos: startPos,
+          currentInstructionIndex: 0,
+          rotationDegree: { from: 0, to: 0 },
+          won: false,
+          overlapResetCount: overlapResetCount + 1,
+        });
       }, 500);
     }
   },
   _moveForward: () => {
     const { planePos, rotationDegree, _planeOverlaps, endPos } = get();
-    let newPos;
+    let newPos: coordinates | undefined;
     if (rotationDegree.to === 0) {
       newPos = { row: planePos.row, col: planePos.col + 1 };
     } else if (rotationDegree.to === 180 || rotationDegree.to === -180) {
@@ -198,7 +236,7 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
     }
 
     // Check if we reached the end immediately after moving
-    if (newPos.row === endPos.row && newPos.col === endPos.col) {
+    if (newPos!.row === endPos.row && newPos!.col === endPos.col) {
       set({ planePos: newPos, won: true });
       return;
     }
@@ -291,14 +329,19 @@ const useInstructionStore = create<InstructionsState>()((set, get) => ({
 
     // Final win check after instruction completes
     const { planePos: finalPlanePos, endPos: finalEndPos } = get();
-    if (finalPlanePos.row === finalEndPos.row && finalPlanePos.col === finalEndPos.col) {
+    if (
+      finalPlanePos.row === finalEndPos.row &&
+      finalPlanePos.col === finalEndPos.col
+    ) {
       set({ won: true });
     }
   },
   resetGame: () => {
-    const { startPos } = get();
+    const { startPos, endPos } = findStartEnd(gameLoop);
     set({
       planePos: startPos,
+      startPos,
+      endPos,
       rotationDegree: { from: 0, to: 0 },
       won: false,
       currentInstructionIndex: 0,
