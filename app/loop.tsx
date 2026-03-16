@@ -11,7 +11,7 @@ import {
   SendHorizonal,
   Star,
 } from "lucide-react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   Easing,
@@ -37,18 +37,39 @@ const LoopGame = () => {
     resetGame,
     currentInstructionIndex,
     won,
+    overlapResetCount,
   } = useInstructionStore();
 
   const boxSize = calculateBoxSize(gameBoard[0]?.length || 12);
 
+  const autoPlayRef = useRef<{
+    id: ReturnType<typeof setTimeout> | null;
+    active: boolean;
+  }>({ id: null, active: false });
+
+  const stopAutoPlay = () => {
+    if (autoPlayRef.current.id) {
+      clearTimeout(autoPlayRef.current.id);
+    }
+    autoPlayRef.current.id = null;
+    autoPlayRef.current.active = false;
+  };
+
   const autoPlay = () => {
-    if (useInstructionStore.getState().won) return;
-    setTimeout(() => {
+    if (autoPlayRef.current.active) return;
+    autoPlayRef.current.active = true;
+
+    const step = () => {
+      if (!autoPlayRef.current.active) return;
       play();
-      if (!useInstructionStore.getState().won) {
-        autoPlay();
+      if (useInstructionStore.getState().won) {
+        stopAutoPlay();
+        return;
       }
-    }, 600);
+      autoPlayRef.current.id = setTimeout(step, 600);
+    };
+
+    step();
   };
 
   const rotation = useSharedValue(0);
@@ -63,19 +84,37 @@ const LoopGame = () => {
     );
   }, [rotation]);
 
+  useEffect(() => {
+    if (won) stopAutoPlay();
+  }, [won]);
+
+  useEffect(() => {
+    if (overlapResetCount > 0) stopAutoPlay();
+  }, [overlapResetCount]);
+
+  useEffect(() => {
+    return () => {
+      stopAutoPlay();
+    };
+  }, []);
+
   return (
     <View className="bg-slate-900 items-center justify-center w-full h-full">
       <View className="flex-row w-full items-center justify-between px-4 py-6">
         <Pressable
-          onPress={() => resetGame()}
+          onPress={() => {
+            stopAutoPlay();
+            resetGame();
+          }}
           className="size-12 rounded-xl border border-gray-500 items-center justify-center"
         >
           <Feather name="trash" size={24} color="#6b7280" />
         </Pressable>
-        {won && <Text className="text-emerald-500 font-bold text-xl">You Won</Text>}
+        {won && (
+          <Text className="text-emerald-500 font-bold text-xl">You Won</Text>
+        )}
         <Text className="text-white font-bold text-2xl">
-          {rotationDegree.to}
-          {WhereToRotate(rotationDegree.to)}
+          {rotationDegree.to} {WhereToRotate(rotationDegree.to)}
         </Text>
       </View>
       <View className="">
