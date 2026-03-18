@@ -40,9 +40,6 @@ jobs:
       - name: Install EAS CLI
         run: npm i -g eas-cli
 
-      - name: Install EAS local build plugin
-        run: npx -y eas-cli-local-build-plugin@18.4.0
-
       - name: Authenticate with Expo
         run: eas whoami
         env:
