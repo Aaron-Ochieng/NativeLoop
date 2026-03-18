@@ -1,6 +1,7 @@
-import firestore from "@react-native-firebase/firestore";
 import * as SQLite from "expo-sqlite";
 import { upsertLevels } from "@/db/database";
+import { collection, getDocs } from "firebase/firestore";
+import { firestoreDb } from "@/services/firebase";
 
 const LEVELS_COLLECTION = "levels";
 
@@ -14,7 +15,7 @@ export async function syncFirestoreToSQLite(db: SQLite.SQLiteDatabase) {
     console.log("Starting sync with Firestore...");
 
     // 1. Fetch data from Firestore
-    const snapshot = await firestore().collection(LEVELS_COLLECTION).get();
+    const snapshot = await getDocs(collection(firestoreDb, LEVELS_COLLECTION));
 
     if (snapshot.empty) {
       console.log("No levels found in Firestore.");
