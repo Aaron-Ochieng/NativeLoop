@@ -1,0 +1,69 @@
+name: Android Dev Build (Local)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build-android-dev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install EAS CLI
+        run: npm i -g eas-cli
+
+      - name: Authenticate with Expo
+        run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run EAS Android Development Build
+        run: eas build --platform android --profile development --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Copy APK to repo root
+        run: |
+          APK_PATH=$(find . -maxdepth 5 -type f -name "*.apk" \
+            -not -path "*/node_modules/*" \
+            -printf "%T@ %p\n" | sort -nr | head -1 | cut -d' ' -f2-)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK found. Check the EAS build output for the artifact path."
+            exit 1
+          fi
+          cp -f "$APK_PATH" "./NativeLoop-development.apk"
+          ls -l "./NativeLoop-development.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NativeLoop-development-apk
+          path: NativeLoop-development.apk
