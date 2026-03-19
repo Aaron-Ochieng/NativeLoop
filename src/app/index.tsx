@@ -2,10 +2,23 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { getAllHydratedLevels } from "@/db/database";
+import useInstructionStore from "@/store/loop-game-instructions";
 
 const Index = () => {
   const router = useRouter();
-
+  const db = useSQLiteContext();
+  const { setGamePuzzles, startPos, endPos } = useInstructionStore();
+  useEffect(() => {
+    const loadLevels = async () => {
+      const res = await getAllHydratedLevels(db);
+      setGamePuzzles(res);
+    };
+    void loadLevels();
+  }, [db]);
+  console.log("Start and end position", startPos, endPos);
   return (
     <View className="w-full h-full items-center justify-center px-8 bg-slate-900 ">
       <SafeAreaView />

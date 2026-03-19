@@ -40,7 +40,7 @@ const LoopGame = () => {
     overlapResetCount,
   } = useInstructionStore();
 
-  const boxSize = calculateBoxSize(gameBoard[0]?.length || 12);
+  const boxSize = calculateBoxSize(gameBoard![0].length || 12);
 
   const autoPlayRef = useRef<{
     id: ReturnType<typeof setTimeout> | null;
@@ -118,18 +118,18 @@ const LoopGame = () => {
         </Text>
       </View>
       <View className="">
-        {gameBoard.map((v, k) => (
+        {gameBoard!.map((v, k) => (
           <View key={k} className="flex-row">
             {v.map((v, key) => (
               <View
                 key={key}
                 style={{ width: boxSize, height: boxSize }}
-                className={`m-[1px] rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
+                className={`m-px rounded-lg items-center justify-center  ${v.c === "indigo" ? "bg-indigo-600" : v.c === "red" ? "bg-red-500" : v.c === "amber" ? "bg-amber-500" : "bg-slate-950"}`}
               >
                 {(v.iS || v.iE) &&
                 !(k === planePos.row && key === planePos.col) &&
-                k !== startPos.row &&
-                key !== startPos.col ? (
+                k !== startPos!.row &&
+                key !== startPos!.col ? (
                   <Star
                     size={15}
                     fill="#ffffff"

@@ -2,20 +2,28 @@ import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400R
 import { useFonts } from "@expo-google-fonts/jetbrains-mono/useFonts";
 import { Stack } from "expo-router";
 import { Sun } from "lucide-react-native";
-import { Pressable } from "react-native";
-import "./globals.css";
+import { Pressable, Text, View } from "react-native";
+import "./global.css";
 import { SQLiteProvider } from "expo-sqlite";
 import { DATABASE_NAME, migrateDbIfNeeded } from "@/db/database";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Suspense } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SyncOnStart from "@/components/sync-on-start";
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({ JetBrainsMono_400Regular });
   if (!fontsLoaded) return null;
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Suspense fallback={null}>
+    <QueryClientProvider client={queryClient}>
+      <Suspense
+        fallback={
+          <View className="flex-1 items-center justify-center bg-slate-900">
+            <Text className="text-white text-lg">Loading...</Text>
+          </View>
+        }
+      >
         <SQLiteProvider
           databaseName={DATABASE_NAME}
           onInit={migrateDbIfNeeded}
@@ -43,6 +51,6 @@ export default function RootLayout() {
           </Stack>
         </SQLiteProvider>
       </Suspense>
-    </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }

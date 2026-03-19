@@ -8,7 +8,7 @@
     "scheme": "nativeloop",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,34 +29,15 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
-        }
-      ],
-      [
-        "expo-sqlite",
-        {
-          "enableFTS": true,
-          "useSQLCipher": true,
+          "backgroundColor": "#208AEF",
           "android": {
-            "enableFTS": false,
-            "useSQLCipher": false
-          },
-          "ios": {
-            "customBuildFlags": [
-              "-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1"
-            ]
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 76
           }
         }
       ],
+      "expo-sqlite",
       "expo-font",
-      "expo-image",
-      "expo-web-browser",
       "expo-build-properties"
     ],
     "experiments": {
@@ -68,6 +49,7 @@
       "eas": {
         "projectId": "90c42f96-ef19-45e4-b46d-ea81c38523b5"
       }
-    }
+    },
+    "owner": "ochiengaaron"
   }
 }
